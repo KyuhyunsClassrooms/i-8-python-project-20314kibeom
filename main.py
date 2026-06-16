@@ -1,6 +1,6 @@
 # AI 활용 자유 주제 파이썬 미니 프로젝트
-# 이름 또는 학번: 
-# 프로젝트 주제: 
+# 이름 또는 학번: 20314 박기범
+# 프로젝트 주제: 스마트 용돈 사용 경고기 및 소비 분석기
 
 # ============================================================
 # 사용 안내
@@ -24,78 +24,103 @@
 # 자신의 주제에 맞게 data를 만드세요.
 #
 # 현재 열의 의미:
-# 0번 열: 활동 이름
-# 1번 열: 필요한 시간(분)
-# 2번 열: 추천 기분
-# 3번 열: 활동 유형
+# 0번 열: 소비 항목의 이름 (문자열)
+# 1번 열: 지출한 금액 (정수형)
+# 2번 열: 지출 카테고리 (문자열)
 # ------------------------------------------------------------
 
-activities = [
-    ["산책하기", 30, "피곤", "운동"],
-    ["짧은 낮잠", 20, "피곤", "휴식"],
-    ["좋아하는 음악 듣기", 10, "우울", "휴식"],
-    ["문제집 3쪽 풀기", 40, "차분", "공부"],
-    ["방 정리하기", 25, "답답", "생활"],
-    ["친구에게 연락하기", 15, "우울", "소통"],
+history = [
+    ["떡볶이", 3500, "식비"],
+    ["영화 관람", 15000, "문화"],
+    ["티셔츠", 20000, "쇼핑"],
+    ["버스비", 1500, "교통"],
+    ["마라탕", 12000, "식비"],
 ]
 
 
 # ------------------------------------------------------------
-# 2. 함수 정의
-# ------------------------------------------------------------
-
-def show_intro():
-    """프로그램 제목과 안내를 출력한다."""
+#def show_menu():
+    print("\n" + "=" * 40)
+    print("💸 스마트 용돈 사용 경고기 및 소비 분석기 💸")
     print("=" * 40)
-    print("AI 활용 자유 주제 파이썬 미니 프로젝트")
-    print("예시: 기분과 시간에 따른 활동 추천기")
-    print("=" * 40)
+    print("1. 소비 내역 입력하기")
+    print("2. 카테고리별 소비 분석 및 경고 확인")
+    print("3. 프로그램 종료")
+    print("-" * 40)
 
 
-def get_user_input():
-    """사용자에게 기분과 남은 시간을 입력받는다."""
-    mood = input("현재 기분을 입력하세요. 예: 피곤, 우울, 차분, 답답: ")
-    minutes = int(input("사용 가능한 시간을 분 단위로 입력하세요: "))
-    return mood, minutes
+def add_expense(history):
+    """항목, 금액, 카테고리를 입력받아 2차원 리스트(history)에 추가합니다."""
+    print("\n[소비 내역 입력]")
+    name = input("소비 항목 이름을 입력하세요 (예: 떡볶이): ")
+    amount = int(input("지출한 금액을 입력하세요 (예: 3500): "))
+    category = input("카테고리를 입력하세요 (예: 식비, 문화, 쇼핑, 교통): ")
+
+    # 계획서에 쓰신 대로, 2차원 리스트에 [이름, 금액, 카테고리] 형태의 새로운 행으로 추가합니다.
+    history.append([name, amount, category])
+    print(f"✅ [{name}] 항목이 [{category}] 카테고리에 성공적으로 추가되었습니다!")
 
 
-def find_recommendations(data, mood, minutes):
-    """2차원 리스트를 반복하며 조건에 맞는 활동을 찾는다."""
-    results = []
+def analyze_expenses(history, budgets):
+    """2차원 리스트를 순회하며 합계를 구하고, 예산 초과 여부를 경고합니다."""
+    print("\n[📊 소비 분석 결과]")
+    
+    # 1. 예외 상황 처리: 입력된 내역이 없을 때
+    if len(history) == 0:
+        print("기록된 지출 내역이 없습니다. 먼저 내역을 입력해주세요.")
+        return
 
-    for row in data:
-        name = row[0]
-        required_minutes = row[1]
-        recommended_mood = row[2]
-        activity_type = row[3]
+    # 카테고리별 누적 지출액을 임시로 저장할 변수들 (딕셔너리 활용)
+    totals = {"식비": 0, "문화": 0, "쇼핑": 0, "교통": 0}
 
-        # 조건문: 사용자의 기분과 시간이 활동 조건에 맞는지 판단한다.
-        if recommended_mood == mood and required_minutes <= minutes:
-            results.append([name, required_minutes, activity_type])
+    # 2. 반복문: 2차원 리스트(history)를 순회하며 카테고리별 금액 합산
+    for row in history:
+        amount = row[1]     # 1번 열: 지출 금액
+        category = row[2]   # 2번 열: 카테고리
+        
+        # 해당 카테고리가 totals 딕셔너리에 있다면 금액을 누적해서 더해줍니다.
+        if category in totals:
+            totals[category] += amount
 
-    return results
+    # 3. 조건문: 카테고리별 예산 비교 및 출력
+    for cat, total in totals.items():
+        if cat in budgets:
+            budget = budgets[cat]
+            leftover = budget - total
+            print(f"- {cat}: 현재 지출 {total}원 / 목표 예산 {budget}원 (남은 금액: {leftover}원)")
 
-
-def print_result(results):
-    """추천 결과를 출력한다."""
-    print("\n[추천 결과]")
-
-    if len(results) == 0:
-        print("조건에 맞는 활동이 없습니다.")
-        print("시간을 늘리거나 다른 기분을 입력해 보세요.")
-    else:
-        for item in results:
-            print(f"- {item[0]} / {item[1]}분 / 유형: {item[2]}")
+            # 예산 초과 경고!
+            if total > budget:
+                print(f"  🚨 삐빅! 경고! [{cat}] 예산을 {-leftover}원 초과했습니다! 지출을 줄이세요!")
 
 
 def main():
-    show_intro()
-    mood, minutes = get_user_input()
-    results = find_recommendations(activities, mood, minutes)
-    print_result(results)
+    """프로그램의 핵심 실행 흐름을 제어합니다."""
+    # 1단계에서 준비한 데이터 (테스트용)
+    history = [
+        ["떡볶이", 3500, "식비"],
+        ["영화 관람", 15000, "문화"]
+    ]
+    budgets = {"식비": 50000, "문화": 30000, "쇼핑": 50000, "교통": 20000}
+
+    # 계획서에 쓰신 대로 while문을 사용하여 종료 전까지 메뉴를 계속 띄웁니다.
+    while True:
+        show_menu()
+        choice = input("원하는 메뉴의 번호를 입력하세요: ")
+
+        if choice == '1':
+            add_expense(history)
+        elif choice == '2':
+            analyze_expenses(history, budgets)
+        elif choice == '3':
+            print("프로그램을 종료합니다. 알뜰한 소비 생활 하세요! 👋")
+            break
+        else:
+            print("잘못된 입력입니다. 1, 2, 3 중에서 선택해주세요.")
 
 
 # ------------------------------------------------------------
 # 3. 프로그램 실행
 # ------------------------------------------------------------
-main()
+if __name__ == "__main__":
+    main()
